@@ -5,6 +5,7 @@ import hello.jdbc.domain.Member;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
+import java.util.NoSuchElementException;
 
 /**
  * JDBC - DriverManager 사용
@@ -34,6 +35,39 @@ public class MemberRepositoryV0 {
             close(con, psmt, null);     // 리소스 해제
         }
 
+    }
+
+    public Member findById(String memberId) throws SQLException {
+        // 특정 회원 ID로 회원 정보를 조회하는 SQL 쿼리
+        String sql = "select * from member where member_id = ?";
+
+        Connection con = null; // 데이터베이스 연결을 위한 Connection 객체
+        PreparedStatement psmt = null; // SQL 문을 실행하기 위한 PreparedStatement 객체
+        ResultSet rs = null; // SQL 쿼리의 결과를 저장하기 위한 ResultSet 객체
+
+        try {
+            con = getConnection(); // 데이터베이스 연결 획득
+            psmt = con.prepareStatement(sql); // SQL 쿼리를 미리 컴파일하여 PreparedStatement 객체 생성
+            psmt.setString(1, memberId); // 첫 번째 매개변수에 memberId 값 설정
+
+            rs = psmt.executeQuery(); // SQL 쿼리 실행 및 결과 집합(ResultSet) 반환
+
+            if (rs.next()) { // 결과 집합의 다음 행이 존재하는지 확인
+                Member member = new Member(); // 새로운 Member 객체 생성
+                member.setMemberId(rs.getString("member_id")); // 결과 집합에서 member_id 값을 가져와 설정
+                member.setMoney(rs.getInt("money")); // 결과 집합에서 money 값을 가져와 설정
+                return member; // 조회된 회원 객체 반환
+            } else {
+                // 결과 집합에 행이 없으면 예외 발생
+                throw new NoSuchElementException("member not found memberId= " + memberId);
+            }
+
+        } catch (SQLException e) {
+            log.error("db error", e); // 데이터베이스 오류 발생 시 로그 출력
+            throw e; // 예외 다시 던짐
+        } finally {
+            close(con, psmt, rs); // 리소스 해제
+        }
     }
 
     // Connection, Statement, ResultSet 객체를 닫는 메서드
