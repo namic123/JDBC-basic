@@ -37,6 +37,44 @@ public class MemberRepositoryV0 {
 
     }
 
+
+    public void update(String memberId, int money) throws SQLException {
+        String sql = "update member set money=? where member_id=?";
+
+        Connection con = null;
+        PreparedStatement psmt = null;
+        try {
+            con = getConnection();  // DB 연결 획득
+            psmt = con.prepareStatement(sql);   // SQL 쿼리를 미리 컴파일하여 PreparedStatement 객체 생성
+            psmt.setInt(1, money);  // 2번째 매개변수에 money 값 설정
+            psmt.setString(2, memberId);    // 1번째 매개변수에 member_id 값 설정
+            int resultSize = psmt.executeUpdate();   // SQL 쿼리 실행 (데이터베이스에 변경 사항 적용)
+            log.info("resultSize=" + resultSize);
+        } catch (SQLException e) {
+            log.error("db error", e);       // 데이터베이스 오류 발생 시 오류 출력
+            throw e;    // 예외 던짐
+        } finally {
+            close(con, psmt, null);     // 리소스 해제
+        }
+    }
+
+    public void deleteById(String memberId) throws SQLException {
+        String sql = "delete from member where member_id=?";
+
+        Connection con = null;
+        PreparedStatement psmt = null;
+        try{
+            con = getConnection();
+            psmt = con.prepareStatement(sql);
+            psmt.setString(1, memberId);
+            psmt.executeUpdate();
+        }catch (SQLException e){
+            log.error("db error", e);
+        }finally {
+            close(con, psmt, null);
+        }
+    }
+
     public Member findById(String memberId) throws SQLException {
         // 특정 회원 ID로 회원 정보를 조회하는 SQL 쿼리
         String sql = "select * from member where member_id = ?";
